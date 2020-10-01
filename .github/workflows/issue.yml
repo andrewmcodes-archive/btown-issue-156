@@ -1,0 +1,35 @@
+name: issue
+
+on:
+  pull_request:
+    branches:
+      - "*"
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: head
+      - uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-
+      - name: Install Bundler
+        run: gem install bundler
+      - name: Configure vendor path
+        run: bundle config path vendor/bundle
+      - name: Bundle Install
+        run: bundle install --jobs 4 --retry 3
+      - name: Check bridgetown version
+        run: bundle exec bridgetown -v
+      - name: Run Automation
+        run: bundle exec bridgetown apply https://github.com/bridgetownrb/bridgetown-cloudinary
